@@ -31,8 +31,9 @@ st.title("🏠 100% Immo — Dashboard Leads (Sellsy)")
 # CLIENT_ID = st.secrets.get("CLIENT_ID", os.getenv("SELLSY_CLIENT_ID", ""))
 # CLIENT_SECRET = st.secrets.get("CLIENT_SECRET", os.getenv("SELLSY_CLIENT_SECRET", ""))
 
-CLIENT_ID = "17cad9a8-d120-48ff-b431-38fd98551f53"
-CLIENT_SECRET = "da26ac6f8b345531709665c168d7dc6126d965aed334afbee05a463cc0a58642"
+CLIENT_ID = st.secrets["CLIENT_ID"]
+CLIENT_SECRET = st.secrets["CLIENT_SECRET"]
+
 
 if not CLIENT_ID or not CLIENT_SECRET:
     st.warning("⚠️ Renseigne CLIENT_ID et CLIENT_SECRET via st.secrets ou variables d'environnement.")
