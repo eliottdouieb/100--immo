@@ -151,7 +151,18 @@ def normalize_steps(df: pd.DataFrame) -> pd.DataFrame:
     df["created_date"] = df["created_dt"].dt.date
 
     # pipeline (commercial)
-    df["pipeline_clean"] = df["pipeline.name"].fillna("Inconnu")
+    def clean_pipeline_name(p):
+        if pd.isna(p):
+            return "Inconnu"
+        return (
+            p.replace("Pipeline", "")
+            .replace("Prospection", "")
+            .replace("Commercial", "")
+            .strip()
+        )
+
+    df["pipeline_clean"] = df["pipeline.name"].apply(clean_pipeline_name)
+
 
     # step group
     raw_step = df["step.name"].fillna("Inconnu")
@@ -198,7 +209,8 @@ with st.spinner("🔄 Récupération des opportunités Sellsy..."):
 df = normalize_steps(df_raw)
 
 # Exclure Prospection GLOBAL
-df = df[df["pipeline_clean"] != "Pipeline Prospection GLOBAL"].copy()
+df = df[df["pipeline_clean"] != "GLOBAL"].copy()
+
 
 # =========================
 # 5) Sidebar filters
