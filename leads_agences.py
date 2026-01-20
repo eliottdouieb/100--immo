@@ -4,6 +4,7 @@ import requests
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+import re
 from datetime import datetime, timedelta, timezone
 
 # =========================
@@ -133,6 +134,28 @@ WORKFLOW_ORDER = [
     "Refus / Devis signé",
 ]
 
+# =========================
+# 3bis) Géographie France
+# =========================
+
+def extract_postal_code(name: str):
+    if not isinstance(name, str):
+        return None
+    match = re.search(r"\b(\d{5})\b", name)
+    return match.group(1) if match else None
+
+
+def postal_to_departement(cp):
+    if not isinstance(cp, str) or len(cp) < 2:
+        return None
+
+    # Corse
+    if cp.startswith("20"):
+        return "2A" if int(cp[2]) < 5 else "2B"
+
+    return cp[:2]
+
+
 def normalize_steps(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
@@ -200,6 +223,7 @@ def normalize_steps(df: pd.DataFrame) -> pd.DataFrame:
     df["workflow_stage"] = df["step_group"].map(to_workflow_stage)
     return df
 
+
 # =========================
 # 4) Load data
 # =========================
@@ -207,6 +231,13 @@ with st.spinner("🔄 Récupération des opportunités Sellsy..."):
     df_raw = fetch_all_opportunities(CLIENT_ID, CLIENT_SECRET)
 
 df = normalize_steps(df_raw)
+
+# =========================
+# Géographie
+# =========================
+df["postal_code"] = df["name"].apply(extract_postal_code)
+df["departement"] = df["postal_code"].apply(postal_to_departement)
+
 
 # Exclure Prospection GLOBAL
 df = df[df["pipeline_clean"] != "GLOBAL"].copy()
@@ -247,6 +278,18 @@ df_f = df_f[df_f["pipeline_clean"].isin(pipeline_selected)].copy()
 status_list = sorted(df["status"].dropna().unique().tolist())
 status_selected = st.sidebar.multiselect("Status", status_list, default=status_list)
 df_f = df_f[df_f["status"].isin(status_selected)].copy()
+
+
+# =========================
+# Leads par département
+# =========================
+by_dept = (
+    df_f.dropna(subset=["departement"])
+    .groupby("departement", as_index=False)
+    .size()
+    .rename(columns={"size": "leads"})
+)
+
 
 # =========================
 # 6) KPIs
@@ -295,6 +338,41 @@ with c2:
     st.plotly_chart(fig_status, use_container_width=True)
 
 st.divider()
+
+
+
+# =========================
+# 🗺️ Carte de France — Leads par département
+# =========================
+st.divider()
+st.subheader("🗺️ Répartition géographique des leads (France)")
+
+fig_map = px.choropleth(
+    by_dept,
+    geojson="https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson",
+    locations="departement",
+    featureidkey="properties.code",
+    color="leads",
+    color_continuous_scale="Blues",
+    hover_name="departement",
+    hover_data={"leads": True},
+)
+
+fig_map.update_geos(
+    scope="europe",
+    center={"lat": 46.5, "lon": 2.5},
+    projection_scale=5,
+    fitbounds="locations",
+    visible=False
+)
+
+fig_map.update_layout(
+    margin={"r": 0, "t": 0, "l": 0, "b": 0},
+    coloraxis_colorbar=dict(title="Leads")
+)
+
+st.plotly_chart(fig_map, use_container_width=True)
+
 
 # =========================
 # 8) Leads par commercial (pipeline)
