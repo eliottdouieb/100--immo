@@ -138,6 +138,14 @@ WORKFLOW_ORDER = [
 # 3bis) Géographie France
 # =========================
 
+@st.cache_data
+def load_france_departements_geojson():
+    url = "https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson"
+    r = requests.get(url, timeout=30)
+    r.raise_for_status()
+    return r.json()
+
+
 def extract_postal_code(name: str):
     if not isinstance(name, str):
         return None
@@ -340,6 +348,7 @@ with c2:
 st.divider()
 
 
+st.write("DEBUG by_dept", by_dept.head())
 
 # =========================
 # 🗺️ Carte de France — Leads par département
@@ -349,7 +358,7 @@ st.subheader("🗺️ Répartition géographique des leads (France)")
 
 fig_map = px.choropleth(
     by_dept,
-    geojson="https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson",
+    geojson=load_france_departements_geojson(),
     locations="departement",
     featureidkey="properties.code",
     color="leads",
