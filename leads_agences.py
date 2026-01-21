@@ -368,8 +368,14 @@ df = normalize_steps(df_raw)
 # =========================
 df["postal_code"] = df["name"].apply(extract_postal_code)
 df["departement"] = df["postal_code"].apply(postal_to_departement)
-df["city"] = df["name"].apply(extract_city)
-df["city"] = df["city"].fillna("Autre")
+# df["city"] = df["name"].apply(extract_city)
+# df["city"] = df["city"].fillna("Autre")
+df["departement_name"] = (
+    df["departement"]
+    .map(DEPT_NAME_MAP)
+    .fillna(df["departement"])
+)
+
 
 
 
