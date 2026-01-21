@@ -439,14 +439,14 @@ by_dept["departement_name"] = (
 # =========================
 # Leads par ville (Top 15)
 # =========================
-by_city = (
-    df_f.groupby("city", as_index=False)
-    .size()
-    .rename(columns={"size": "leads"})
-    .sort_values("leads", ascending=False)
-)
+# by_city = (
+#     df_f.groupby("city", as_index=False)
+#     .size()
+#     .rename(columns={"size": "leads"})
+#     .sort_values("leads", ascending=False)
+# )
 
-top_15_cities = by_city.head(15)
+# top_15_cities = by_city.head(15)
 
 
 # =========================
