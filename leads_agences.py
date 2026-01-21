@@ -337,6 +337,23 @@ def normalize_steps(df: pd.DataFrame) -> pd.DataFrame:
     df["workflow_stage"] = df["step_group"].map(to_workflow_stage)
     return df
 
+def extract_city(name: str):
+    if not isinstance(name, str):
+        return None
+
+    # Cas : "(Code postal : 77130 MONTEREAU FAULT YONNE)"
+    match = re.search(r"\b\d{5}\s+([A-Za-zÀ-ÿ\- ]{3,})", name)
+    if match:
+        return match.group(1).strip().title()
+
+    # Cas : "(Code postal : 42, Guynemer, 83100 Toulon)"
+    match = re.search(r"\b\d{5}\s+([A-Za-zÀ-ÿ\- ]+)$", name)
+    if match:
+        return match.group(1).strip().title()
+
+    return None
+
+
 
 # =========================
 # 4) Load data
@@ -351,6 +368,9 @@ df = normalize_steps(df_raw)
 # =========================
 df["postal_code"] = df["name"].apply(extract_postal_code)
 df["departement"] = df["postal_code"].apply(postal_to_departement)
+df["city"] = df["name"].apply(extract_city)
+df["city"] = df["city"].fillna("Autre")
+
 
 
 # Exclure Prospection GLOBAL
@@ -409,6 +429,18 @@ by_dept["departement_name"] = (
     .map(DEPT_NAME_MAP)
     .fillna(by_dept["departement"])
 )
+
+# =========================
+# Leads par ville (Top 15)
+# =========================
+by_city = (
+    df_f.groupby("city", as_index=False)
+    .size()
+    .rename(columns={"size": "leads"})
+    .sort_values("leads", ascending=False)
+)
+
+top_15_cities = by_city.head(15)
 
 
 # =========================
@@ -506,6 +538,30 @@ fig_map.update_layout(
 
 
 st.plotly_chart(fig_map, use_container_width=True)
+
+
+
+st.divider()
+st.subheader("🏙️ Top 15 villes avec le plus de leads")
+
+fig_city = px.bar(
+    top_15_cities,
+    x="leads",
+    y="city",
+    orientation="h",
+    text="leads",
+    color="leads",
+    color_continuous_scale="YlOrRd"
+)
+
+fig_city.update_layout(
+    xaxis_title="Nombre de leads",
+    yaxis_title="Ville",
+    yaxis=dict(categoryorder="total ascending"),
+    coloraxis_showscale=False
+)
+
+st.plotly_chart(fig_city, use_container_width=True)
 
 
 # =========================
