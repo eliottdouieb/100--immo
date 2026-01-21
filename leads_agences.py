@@ -541,28 +541,33 @@ st.plotly_chart(fig_map, use_container_width=True)
 
 
 
-st.divider()
-st.subheader("🏙️ Top 15 villes avec le plus de leads")
+by_dept_bar = (
+    df_f.groupby("departement_name", as_index=False)
+    .size()
+    .rename(columns={"size": "leads"})
+    .sort_values("leads", ascending=False)
+    .head(15)
+)
 
-fig_city = px.bar(
-    top_15_cities,
+fig_dept = px.bar(
+    by_dept_bar,
     x="leads",
-    y="city",
+    y="departement_name",
     orientation="h",
     text="leads",
     color="leads",
     color_continuous_scale="YlOrRd"
 )
 
-fig_city.update_layout(
+fig_dept.update_layout(
+    title="Top 15 départements par nombre de leads",
     xaxis_title="Nombre de leads",
-    yaxis_title="Ville",
+    yaxis_title="Département",
     yaxis=dict(categoryorder="total ascending"),
     coloraxis_showscale=False
 )
 
-st.plotly_chart(fig_city, use_container_width=True)
-
+st.plotly_chart(fig_dept, use_container_width=True)
 
 # =========================
 # 8) Leads par commercial (pipeline)
