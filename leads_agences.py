@@ -493,6 +493,8 @@ fig_map.update_layout(
     coloraxis_colorbar=dict(title="Leads")
 )
 
+max_leads = by_dept["leads"].max()
+
 fig_map.update_layout(
     coloraxis=dict(
         cmin=0,
