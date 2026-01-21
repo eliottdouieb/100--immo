@@ -474,7 +474,7 @@ fig_map = px.choropleth(
     locations="departement",
     featureidkey="properties.code",
     color="leads",
-    color_continuous_scale="YlOrRd",
+    color_continuous_scale="Viridis",
     hover_name="departement_name",
     hover_data={"leads": True},
 )
