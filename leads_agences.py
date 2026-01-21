@@ -474,10 +474,11 @@ fig_map = px.choropleth(
     locations="departement",
     featureidkey="properties.code",
     color="leads",
-    color_continuous_scale="Viridis",
+    color_continuous_scale="YlOrRd",
     hover_name="departement_name",
     hover_data={"leads": True},
 )
+
 
 fig_map.update_geos(
     scope="europe",
@@ -491,6 +492,16 @@ fig_map.update_layout(
     margin={"r": 0, "t": 0, "l": 0, "b": 0},
     coloraxis_colorbar=dict(title="Leads")
 )
+
+fig_map.update_layout(
+    coloraxis=dict(
+        cmin=0,
+        cmax=max_leads,
+        cmid=by_dept["leads"].median(),
+        colorbar=dict(title="Nombre de leads")
+    )
+)
+
 
 st.plotly_chart(fig_map, use_container_width=True)
 
